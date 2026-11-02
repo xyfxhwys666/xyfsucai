@@ -8,7 +8,7 @@ services:
       MYSQL_PASSWORD: material
       MYSQL_ROOT_PASSWORD: root
     volumes: ["mysql-data:/var/lib/mysql"]
-    ports: ["3306:3306"]
+    ports: ["3307:3306"]
     healthcheck: {test: ["CMD","mysqladmin","ping","-h","localhost","-umaterial","-pmaterial"], interval: 5s, timeout: 5s, retries: 20}
   backend:
     build: ./backend

@@ -1,0 +1,22 @@
+server:
+  port: 8080
+spring:
+  sql:
+    init:
+      mode: always
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/material_app?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Tokyo}
+    username: ${DB_USERNAME:material}
+    password: ${DB_PASSWORD:material}
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 20MB
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+app:
+  storage-dir: ${STORAGE_DIR:./data/uploads}
+  task-delay-ms: ${TASK_DELAY_MS:1200}
+  fail-stage: ${FAIL_STAGE:none}
+  cors-origin: ${CORS_ORIGIN:http://localhost:3000}

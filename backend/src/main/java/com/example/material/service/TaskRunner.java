@@ -1,0 +1,9 @@
+package com.example.material.service;
+import com.example.material.model.Task; import com.example.material.repo.TaskMapper; import org.springframework.beans.factory.annotation.Value; import org.springframework.scheduling.annotation.Async; import org.springframework.stereotype.Service; import java.time.LocalDateTime;
+@Service public class TaskRunner {
+ private final TaskMapper tasks; private final long delay; private final String failStage;
+ public TaskRunner(TaskMapper tasks,@Value("${app.task-delay-ms}") long delay,@Value("${app.fail-stage}") String failStage){this.tasks=tasks;this.delay=delay;this.failStage=failStage;}
+ @Async("taskExecutor") public void run(Task initial){try{step(initial,"PROCESSING","ASSET_CHECK");pause();failIf("ASSET_CHECK","模拟失败：素材检查未通过");step(initial,"PROCESSING","GENERATING");pause();failIf("GENERATING","模拟失败：生成服务超时");step(initial,"PROCESSING","PACKAGING");pause();failIf("PACKAGING","模拟失败：结果整理失败");update(initial,"SUCCEEDED","COMPLETED",null,"/demo/result-"+initial.templateId()+".svg");}catch(Exception e){update(initial,"FAILED",stage(e),e.getMessage(),null);}}
+ private void pause() throws InterruptedException{Thread.sleep(delay);} private void failIf(String stage,String message){if(failStage.equalsIgnoreCase(stage)||failStage.equalsIgnoreCase(stage.replace("_","-")))throw new IllegalStateException(message);} private String stage(Exception e){String m=e.getMessage();return m!=null&&m.contains("素材")?"ASSET_CHECK":m!=null&&m.contains("生成")?"GENERATING":"PACKAGING";}
+ private void step(Task t,String status,String stage){update(t,status,stage,null,null);} private void update(Task t,String status,String stage,String error,String result){Task old=tasks.find(t.id(),t.userId());if(old!=null)tasks.update(new Task(t.id(),old.userId(),old.templateId(),status,stage,error,result,old.createdAt(),LocalDateTime.now()));}
+}

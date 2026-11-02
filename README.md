@@ -1,0 +1,45 @@
+# 灵感工坊（素材制作异步任务演示）
+
+这是一个独立运行的素材制作网站示例，前端使用 Next.js App Router + React + TypeScript，后端使用 Java 21、Spring Boot 3.3.5、MyBatis 3.0.3，数据存储使用 MySQL 8.4。仓库原始状态为空；公开检索没有找到可直接复用的同题项目，因此业务代码和演示素材均在本仓库实现。
+
+## 启动
+
+需要 Docker Desktop。执行：
+
+```bash
+docker compose up --build
+```
+
+浏览器打开 <http://localhost:3000>，后端 API 在 <http://localhost:8080>。首次启动由 Spring SQL 初始化表和种子模板。上传文件和 MySQL 数据分别存放在 Compose named volume 中。
+
+本地开发也可以分别启动：后端 `cd backend && mvn spring-boot:run`，前端 `cd frontend && npm install && npm run dev`。前端通过 `NEXT_PUBLIC_API_URL` 指向 Java API；后端通过 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD` 配置连接。
+
+## 业务边界与接口
+
+- `GET /api/templates`、`GET /api/templates/{id}`：模板列表/详情。
+- `POST /api/tasks`：multipart 参数 `templateId` 和重复的 `files`；服务端重新校验数量、MIME 类型和大小，写入本地存储后创建任务，返回 HTTP 202 和任务记录。
+- `GET /api/tasks`、`GET /api/tasks/{id}`：按 `X-Demo-User` 请求头查询个人历史或单个任务；未传时使用 `demo-user`。
+
+任务状态为 `QUEUED`、`PROCESSING`、`SUCCEEDED`、`FAILED`，阶段为 `ASSET_CHECK`、`GENERATING`、`PACKAGING`、`COMPLETED`。提交接口不等待生成完成。Java `@Async` 线程池顺序执行素材检查、模拟生成、结果整理，每一步先写入数据库再延迟；失败后立即终止并保存阶段和原因。前端仅轮询查询，不驱动状态推进；刷新页面会先加载历史，再继续跟踪未结束任务。
+
+## 演示控制
+
+Compose 默认 `TASK_DELAY_MS=1200`，可调大以观察处理中和多任务：
+
+```bash
+TASK_DELAY_MS=5000 docker compose up --build
+```
+
+指定阶段失败：`FAIL_STAGE=ASSET_CHECK`、`GENERATING` 或 `PACKAGING`（也接受连字符写法），例如 `FAIL_STAGE=GENERATING docker compose up --build`。失败只影响新创建的任务。可连续打开多个模板并提交，任务卡片相互独立。刷新浏览器即可演示服务端历史恢复。
+
+身份采用轻量演示策略：`X-Demo-User` 是用户边界，前端固定显示 `demo-user`；调用 API 时改成另一个值即可看到独立历史。没有实现账号、密码或第三方登录，这符合题目允许自行设计身份策略的范围。
+
+## 测试与交付
+
+CI 位于 `.github/workflows/ci.yml`，push/PR 会执行 Java `mvn test package`，以及前端 lint、TypeScript 检查和生产构建。后端测试覆盖阶段顺序和失败终态的核心契约；前端状态逻辑保持任务 ID 维度隔离，查询异常不会把已有任务改成失败（当前仓库未配置浏览器 E2E）。
+
+已知限制：服务重启不会自动恢复执行中线程，题目明确不要求；任务受理幂等、断点续跑和自动重试也未实现。生成结果是本地 SVG 演示图，不调用真实 AI。模板封面和结果素材为仓库自制 SVG。部署回滚可通过切换 Git commit 后重新执行 `docker compose up --build`，数据卷需按需保留或迁移。
+
+## AI 工作流说明
+
+本项目使用 AI 编程工具完成：先读取题目与仓库状态，检索公开仓库确认没有直接可复用实现，再按“数据模型/后端异步边界/前端状态/容器与 CI/文档”拆分实现；每阶段通过源码检查、Maven/npm 构建和 Compose 集成验证修正问题。没有复制第三方业务代码或受限素材。

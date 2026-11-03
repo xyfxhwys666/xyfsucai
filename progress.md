@@ -30,3 +30,6 @@
 - 最终验证通过：后端 `mvn clean test package`，前端 typecheck、lint、Vitest 和 production build；本地 3000/8080/3307 服务保持可用。
 - 修复开发服务器偶发缺少 Next.js 分块的问题：开发缓存改用 `.next-dev`，生产与 Docker 构建继续使用 `.next`。
 - 在 `next dev` 持续运行时完成 typecheck、Vitest 与 `next build`，`.next-dev` 和 `.next` 分别生成；随后刷新首页确认 6 个模板正常、无控制台错误。
+- 根据用户反馈开始纠正新增模板素材边界：用户提供图片只用于上传测试，新增模板改用通用演示图展示固定处理规则。
+- 完成新增 3 个模板的程序化通用预览并更新 Java 种子描述，移除梦境花树、雨夜城市和冰川人物三张用户测试素材；浏览器确认新预览和固定规则文案正常显示。
+- 最终通过后端 Maven 测试打包、前端 typecheck/lint/Vitest/build；生产构建后开发页面仍加载 6 个通用模板预览且无控制台错误。

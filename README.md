@@ -14,7 +14,7 @@ docker compose up --build
 
 页面划分为两个业务入口：首页 `/` 用于自动轮播 6 个精选模板、分类筛选和提交制作；个人作品页 `/creations` 专门展示当前身份的任务状态、失败原因和成功结果。模板卡片和详情顶部展示的是“处理后效果示例”，帮助用户先判断版式效果；用户提交后仍会使用本次上传素材生成独立结果，不会直接返回示例图。右上角身份按钮打开个人中心侧栏，可切换身份、查看任务统计和最近制作，并进入完整作品历史。数据库初始化不会创建任何默认任务记录。
 
-演示图片来自用户为本项目提供的本地素材。原有头像、拼贴和明信片预览由 `scripts/generate_preview_assets.py` 使用 Pillow 离线合成为 JPG；新增的梦境、雨夜和冰川示例直接作为效果封面使用。运行网站不依赖该脚本、外部图片服务或付费素材源，生成后的静态文件已提交到仓库。
+模板预览只用于展示固定处理规则，不使用用户上传的测试素材。6 个预览均由 `scripts/generate_preview_assets.py` 使用仓库内通用演示图离线合成为 JPG；梦境海报、雨夜电影感和冰川幻想分别演示固定的海报排版、电影调色和双图组合流程。运行网站不依赖该脚本、外部图片服务或付费素材源，生成后的静态文件已提交到仓库。用户提供的图片仅用于本地上传验收，不提交进模板素材目录。
 
 本地开发也可以分别启动：先用 `docker compose up -d db` 启动映射到本机 3307 端口的数据库；后端进入 `backend`，设置 `DB_URL=jdbc:mysql://localhost:3307/material_app?...` 后运行 `mvn spring-boot:run`（或构建后 `java -jar target/material-backend-1.0.0.jar`）；前端进入 `frontend` 后运行 `npm install && npm run dev`。前端通过 `NEXT_PUBLIC_API_URL` 指向 Java API；后端通过 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD` 配置连接。
 

@@ -11,5 +11,5 @@ import java.util.concurrent.Executor;
  @Value("${app.cors-origin}") String origin; @Value("${app.storage-dir}") String storage;
  @Bean("taskExecutor") Executor taskExecutor(){ var e=new ThreadPoolTaskExecutor(); e.setCorePoolSize(4); e.setMaxPoolSize(8); e.setQueueCapacity(50); e.setThreadNamePrefix("material-task-"); e.initialize(); return e; }
  public void addCorsMappings(CorsRegistry r){ r.addMapping("/api/**").allowedOrigins(origin).allowedMethods("GET","POST","OPTIONS").allowedHeaders("*"); }
- public void addResourceHandlers(ResourceHandlerRegistry r){ r.addResourceHandler("/uploads/**").addResourceLocations("file:"+storage+"/"); }
+ public void addResourceHandlers(ResourceHandlerRegistry r){ r.addResourceHandler("/uploads/**").addResourceLocations("file:"+storage+"/"); r.addResourceHandler("/results/**").addResourceLocations("file:"+storage+"/results/"); }
 }

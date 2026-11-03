@@ -4,6 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { applyPollResults, isTerminalTask, type Task } from '../lib/task-state';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+const MEDIA_ORIGIN = API.replace(/\/api\/?$/, '');
+const userProfiles = [
+  { id: 'demo-user', label: '演示用户' },
+  { id: 'creator-lin', label: '创作者 林' },
+  { id: 'creator-mia', label: '创作者 Mia' },
+];
 type Template = {
   id: string;
   title: string;
@@ -21,6 +27,7 @@ const stageLabels: Record<string, string> = {
   ASSET_CHECK: '素材检查', GENERATING: '模拟生成', PACKAGING: '结果整理', COMPLETED: '已完成',
 };
 const byteLabel = (bytes: number) => `${Math.round(bytes / 1024 / 1024)} MB`;
+const mediaUrl = (url: string) => url.startsWith('/results/') || url.startsWith('/uploads/') ? `${MEDIA_ORIGIN}${url}` : url;
 
 export default function Home() {
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -35,47 +42,72 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [preview, setPreview] = useState<{ src: string; title: string } | null>(null);
+  const [userId, setUserId] = useState('demo-user');
+  const [identityReady, setIdentityReady] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+  const loadController = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const savedUser = window.localStorage.getItem('material-studio-user');
+    if (savedUser && userProfiles.some(profile => profile.id === savedUser)) setUserId(savedUser);
+    setIdentityReady(true);
+  }, []);
 
   const load = useCallback(async (quiet = false) => {
+    if (!identityReady) return;
+    loadController.current?.abort();
+    const controller = new AbortController();
+    loadController.current = controller;
     if (!quiet) setRefreshing(true);
     try {
       const [templateResponse, taskResponse] = await Promise.all([
-        fetch(`${API}/templates`), fetch(`${API}/tasks`),
+        fetch(`${API}/templates`, { signal: controller.signal }),
+        fetch(`${API}/tasks`, { headers: { 'X-Demo-User': userId }, signal: controller.signal }),
       ]);
       if (!templateResponse.ok || !taskResponse.ok) throw new Error('服务暂时不可用');
       setTemplates(await templateResponse.json());
       setTasks(await taskResponse.json());
       setError('');
       setPollingError(false);
-    } catch {
+    } catch (cause) {
+      if (cause instanceof DOMException && cause.name === 'AbortError') return;
       setError('暂时无法连接服务。已有任务状态已保留，请稍后重试。');
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (!controller.signal.aborted) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
-  }, []);
+  }, [identityReady, userId]);
 
-  useEffect(() => { void load(true); }, [load]);
+  useEffect(() => {
+    if (!identityReady) return;
+    setTasks([]);
+    void load(true);
+    return () => loadController.current?.abort();
+  }, [identityReady, userId, load]);
 
   useEffect(() => {
     const activeTasks = tasks.filter(task => !isTerminalTask(task));
-    if (activeTasks.length === 0) return;
+    if (!identityReady || activeTasks.length === 0) return;
+    const controller = new AbortController();
     const timer = window.setInterval(async () => {
       const results = await Promise.all(activeTasks.map(async task => {
         try {
-          const response = await fetch(`${API}/tasks/${task.id}`);
+          const response = await fetch(`${API}/tasks/${task.id}`, { headers: { 'X-Demo-User': userId }, signal: controller.signal });
           if (!response.ok) return { id: task.id, requestFailed: true };
           return { id: task.id, task: await response.json() as Task, requestFailed: false };
         } catch {
           return { id: task.id, requestFailed: true };
         }
       }));
+      if (controller.signal.aborted) return;
       setTasks(current => applyPollResults(current, results).tasks);
       setPollingError(results.some(result => result.requestFailed));
     }, 1400);
-    return () => window.clearInterval(timer);
-  }, [tasks]);
+    return () => { controller.abort(); window.clearInterval(timer); };
+  }, [tasks, userId, identityReady]);
 
   const categories = useMemo(() => ['全部模板', ...new Set(templates.map(template => template.category))], [templates]);
   const visibleTemplates = templates.filter(template => category === '全部模板' || template.category === category);
@@ -84,13 +116,26 @@ export default function Home() {
   useEffect(() => () => localPreviews.forEach(url => { if (url) URL.revokeObjectURL(url); }), [localPreviews]);
 
   useEffect(() => {
-    if (!selected && !preview) return;
+    if (!selected && !preview && !accountOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { setSelected(null); setPreview(null); }
+      if (event.key === 'Escape') { setSelected(null); setPreview(null); setAccountOpen(false); }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [selected, preview]);
+  }, [selected, preview, accountOpen]);
+
+  const currentProfile = userProfiles.find(profile => profile.id === userId) || userProfiles[0];
+
+  function switchUser(nextUser: string) {
+    window.localStorage.setItem('material-studio-user', nextUser);
+    setAccountOpen(false);
+    setSelected(null);
+    setPreview(null);
+    setPollingError(false);
+    setError('');
+    setTasks([]);
+    setUserId(nextUser);
+  }
 
   function openTemplate(template: Template) {
     setSelected(template);
@@ -124,7 +169,7 @@ export default function Home() {
     form.append('templateId', selected.id);
     files.forEach(file => { if (file) form.append('files', file); });
     try {
-      const response = await fetch(`${API}/tasks`, { method: 'POST', body: form });
+      const response = await fetch(`${API}/tasks`, { method: 'POST', headers: { 'X-Demo-User': userId }, body: form });
       const body = await response.json();
       if (!response.ok) throw new Error(body.message || '提交失败，请检查素材后重试。');
       setTasks(current => [body, ...current]);
@@ -148,7 +193,14 @@ export default function Home() {
           <a className="nav-active" href="#templates">发现模板</a>
           <a href="#history">制作记录</a>
         </nav>
-        <div className="account"><span className="account-dot" />演示用户 <strong>demo-user</strong></div>
+        <div className="account-wrap">
+          <button className="account" aria-expanded={accountOpen} aria-haspopup="menu" onClick={() => setAccountOpen(open => !open)}><span className="account-dot" />{currentProfile.label} <strong>{currentProfile.id}</strong><span aria-hidden="true">⌄</span></button>
+          {accountOpen && <div className="account-menu" role="menu" aria-label="切换创作者身份">
+            <span>本地创作者档案</span>
+            {userProfiles.map(profile => <button key={profile.id} role="menuitem" className={profile.id === userId ? 'active' : ''} onClick={() => switchUser(profile.id)}><span>{profile.label}</span><small>{profile.id}</small>{profile.id === userId && <b aria-hidden="true">✓</b>}</button>)}
+            <p>身份保存在当前浏览器，每个档案只显示自己的制作记录。</p>
+          </div>}
+        </div>
       </header>
 
       {error && <div className="notice error" role="alert"><span>{error}</span><button onClick={() => void load()}>重新连接</button></div>}
@@ -191,17 +243,17 @@ export default function Home() {
       </section>
 
       <section className="history-section" id="history">
-        <div className="history-heading"><div><span className="eyebrow">YOUR CREATIONS</span><h2>制作记录</h2></div><button className="refresh-button" disabled={refreshing} onClick={() => void load()}><span aria-hidden="true">↻</span>{refreshing ? '正在刷新' : '刷新记录'}</button></div>
-        {tasks.length === 0 ? <div className="history-empty">还没有制作任务。选一个模板，开始第一次创作。</div> : (
+        <div className="history-heading"><div><span className="eyebrow">YOUR CREATIONS</span><h2>制作记录</h2><p className="identity-note">当前档案：{currentProfile.label} · 刷新后仍会恢复此身份的记录</p></div><button className="refresh-button" disabled={refreshing} onClick={() => void load()}><span aria-hidden="true">↻</span>{refreshing ? '正在刷新' : '刷新记录'}</button></div>
+        {tasks.length === 0 ? <div className="history-empty">{currentProfile.label} 还没有制作任务。选一个模板，开始第一次创作。</div> : (
           <div className="history-list">
             {tasks.map(task => {
               const template = templates.find(item => item.id === task.templateId);
               return <article className="history-row" key={task.id}>
-                <div className="history-thumb">{task.status === 'SUCCEEDED' && task.resultUrl ? <button aria-label={`预览${template?.title || '制作'}结果`} onClick={() => setPreview({ src: task.resultUrl!, title: `${template?.title || '制作'}结果` })}><img src={task.resultUrl} alt="" /></button> : <span>{template?.category || '制作中'}</span>}</div>
+                <div className="history-thumb">{task.status === 'SUCCEEDED' && task.resultUrl ? <button aria-label={`预览${template?.title || '制作'}结果`} onClick={() => setPreview({ src: mediaUrl(task.resultUrl!), title: `${template?.title || '制作'}结果` })}><img src={mediaUrl(task.resultUrl)} alt="" /></button> : <span>{template?.category || '制作中'}</span>}</div>
                 <div className="history-info"><strong>{template?.title || task.templateId}</strong><span>{new Date(task.createdAt).toLocaleString('zh-CN')}</span></div>
                 <div className="history-stage"><span className={`task-status ${task.status.toLowerCase()}`}>{statusLabels[task.status] || task.status}</span><span>{stageLabels[task.stage] || task.stage}</span></div>
                 {task.status === 'FAILED' && <p className="task-error">{task.errorMessage || '制作失败'}</p>}
-                {task.status === 'SUCCEEDED' && task.resultUrl && <button className="view-result" onClick={() => setPreview({ src: task.resultUrl!, title: `${template?.title || '制作'}结果` })}>查看结果 <span aria-hidden="true">↗</span></button>}
+                {task.status === 'SUCCEEDED' && task.resultUrl && <button className="view-result" onClick={() => setPreview({ src: mediaUrl(task.resultUrl!), title: `${template?.title || '制作'}结果` })}>查看结果 <span aria-hidden="true">↗</span></button>}
               </article>;
             })}
           </div>

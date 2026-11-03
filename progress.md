@@ -16,3 +16,6 @@
 - 新增 Vitest 状态逻辑测试，覆盖多任务按 ID 隔离、查询异常保留原状态、失败任务终态识别。
 - 验证通过：前端 lint、typecheck、3 个 Vitest 用例和 production build；后端 `mvn test package`。
 - 改版已提交并推送到 GitHub `main`，验收 commit 为 `94f97c2a`。
+- 修正固定结果缺陷：Java 在结果整理阶段读取当前任务素材，生成内嵌上传图片的任务专属 SVG；新增测试验证两个上传文件均进入结果。
+- 新增本地创作者档案选择器，身份写入 localStorage，所有任务接口携带 X-Demo-User，切换身份会取消旧请求并恢复该用户历史。
+- 浏览器实测：creator-lin 上传两张不同图片后结果同时包含两图；刷新后身份和历史恢复；creator-mia 历史为空且无法查询 creator-lin 的任务（HTTP 404）。

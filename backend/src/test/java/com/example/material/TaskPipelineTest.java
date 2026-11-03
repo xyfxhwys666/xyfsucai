@@ -3,6 +3,7 @@ package com.example.material;
 import com.example.material.model.Task;
 import com.example.material.repo.TaskMapper;
 import com.example.material.service.TaskRunner;
+import com.example.material.service.ResultComposer;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -23,10 +24,12 @@ class TaskPipelineTest {
     @Test
     void successfulRunPersistsStepsInOrder() {
         TaskMapper mapper = mock(TaskMapper.class);
+        ResultComposer composer = mock(ResultComposer.class);
         Task task = newTask();
         when(mapper.find(task.id(), task.userId())).thenReturn(task);
+        try { when(composer.create(task)).thenReturn("/results/task-1.svg"); } catch (Exception error) { throw new RuntimeException(error); }
 
-        new TaskRunner(mapper, 0, "none").run(task);
+        new TaskRunner(mapper, composer, 0, "none").run(task);
 
         ArgumentCaptor<Task> updates = ArgumentCaptor.forClass(Task.class);
         verify(mapper, org.mockito.Mockito.times(4)).update(updates.capture());
@@ -38,10 +41,11 @@ class TaskPipelineTest {
     @Test
     void failedGenerationStopsBeforePackaging() {
         TaskMapper mapper = mock(TaskMapper.class);
+        ResultComposer composer = mock(ResultComposer.class);
         Task task = newTask();
         when(mapper.find(task.id(), task.userId())).thenReturn(task);
 
-        new TaskRunner(mapper, 0, "GENERATING").run(task);
+        new TaskRunner(mapper, composer, 0, "GENERATING").run(task);
 
         ArgumentCaptor<Task> updates = ArgumentCaptor.forClass(Task.class);
         verify(mapper, org.mockito.Mockito.times(3)).update(updates.capture());

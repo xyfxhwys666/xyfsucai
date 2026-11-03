@@ -28,3 +28,5 @@
 - 验证生成结果嵌入的图片字节哈希与本次上传源文件一致，证明新增模板没有返回固定示例图。
 - 将原有头像、四格拼贴和明信片封面也升级为离线合成的 JPG 成品效果图，6 个模板现在全部展示处理后预览；三个演示身份的验收任务均已清理为 0。
 - 最终验证通过：后端 `mvn clean test package`，前端 typecheck、lint、Vitest 和 production build；本地 3000/8080/3307 服务保持可用。
+- 修复开发服务器偶发缺少 Next.js 分块的问题：开发缓存改用 `.next-dev`，生产与 Docker 构建继续使用 `.next`。
+- 在 `next dev` 持续运行时完成 typecheck、Vitest 与 `next build`，`.next-dev` 和 `.next` 分别生成；随后刷新首页确认 6 个模板正常、无控制台错误。

@@ -14,12 +14,13 @@
 - [complete] 阶段 8：结果绑定上传素材并完善用户身份隔离
 - [complete] 阶段 9：拆分作品页、个人中心侧栏与自动轮播
 - [complete] 阶段 10：扩充结果示例模板与生成布局
+- [complete] 阶段 11：隔离 Next.js 开发与生产构建缓存
 
 ## 当前阶段
 全部阶段已完成
 
 ## Next Step
-提交本轮 6 模板效果预览更新并推送 GitHub main。
+等待用户继续验收本地页面。
 
 ## 决策记录
 - 用户身份先采用演示用户 ID（请求头可切换），避免引入不在范围内的账号系统；README 明确演示方式。
@@ -36,3 +37,4 @@
 | Edge 自动化文件选择器无本地文件访问权限 | 1 | 保留可见上传流程检查，改用同一 Java multipart 接口验证文件校验、任务执行与结果绑定 |
 | PowerShell `Invoke-RestMethod -Form` 将图片作为不符合模板的类型提交 | 1 | 改用 `curl -F` 显式声明 `image/jpeg`，任务受理并成功完成 |
 | `git push` 连接 GitHub 443 超时 | 1 | 本地 commit 已完成，检查代理与网络后重试推送 |
+| Next.js 开发服务缺少 `./138.js` 分块 | 1 | 确认由运行中的 `next dev` 与 `next build` 共用 `.next` 导致，改为开发环境使用 `.next-dev` |

@@ -18,6 +18,8 @@ docker compose up --build
 
 本地开发也可以分别启动：先用 `docker compose up -d db` 启动映射到本机 3307 端口的数据库；后端进入 `backend`，设置 `DB_URL=jdbc:mysql://localhost:3307/material_app?...` 后运行 `mvn spring-boot:run`（或构建后 `java -jar target/material-backend-1.0.0.jar`）；前端进入 `frontend` 后运行 `npm install && npm run dev`。前端通过 `NEXT_PUBLIC_API_URL` 指向 Java API；后端通过 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD` 配置连接。
 
+前端开发服务使用 `.next-dev`，生产构建使用 `.next`，因此本地验收时执行 `npm run build` 不会覆盖正在运行的开发服务器缓存。Dockerfile 仍从标准 `.next` 目录复制 standalone 产物。
+
 ## 业务边界与接口
 
 - `GET /api/templates`、`GET /api/templates/{id}`：模板列表/详情。

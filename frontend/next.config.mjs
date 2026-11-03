@@ -1,1 +1,6 @@
-const nextConfig = { output: 'standalone' }; export default nextConfig;
+const nextConfig = {
+  output: 'standalone',
+  distDir: process.env.NODE_ENV === 'development' ? '.next-dev' : '.next',
+};
+
+export default nextConfig;

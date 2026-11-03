@@ -25,3 +25,4 @@
 - 使用 `demo-dream-poster` 提交用户提供的樱花树图片后，任务完成为 `SUCCEEDED/COMPLETED`；结果 SVG 中嵌入字节的 SHA-256 与源文件一致，并包含 `DREAMSCAPE` 独立版式。
 - Edge 自动化扩展未开启“允许访问文件 URL”，因此浏览器自动注入本地文件被扩展阻止；改用同一 Java multipart 接口完成后端校验、异步执行、历史恢复和结果预览验收。
 - 原有 3 个模板若用 SVG 外链引用 JPG，浏览器将 SVG 作为图片加载时不会稳定渲染外链资源；已改为 Pillow 离线合成 JPG 成品预览，浏览器截图确认头像照片和版式文字均完整显示。
+- `next dev` 运行期间执行 `next build` 会共同写入默认 `.next`，可能让开发服务器引用已被替换的分块并报 `Cannot find module './138.js'`；为开发环境设置独立 `.next-dev` 可从结构上避免冲突。

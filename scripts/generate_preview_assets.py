@@ -21,29 +21,6 @@ def save(image: Image.Image, name: str) -> None:
     image.save(DEMO / name, "JPEG", quality=91, optimize=True, progressive=True)
 
 
-def generated_scene(size: tuple[int, int], variant: int) -> Image.Image:
-    palettes = [
-        ((33, 46, 40), (174, 126, 86), "#f1cf8f", "#314c3d"),
-        ((28, 37, 55), (116, 97, 122), "#f4d6a3", "#324460"),
-        ((54, 39, 32), (173, 101, 73), "#f3c66f", "#5b4035"),
-    ]
-    top, bottom, sun, land = palettes[variant % len(palettes)]
-    image = Image.new("RGB", size)
-    draw = ImageDraw.Draw(image)
-    for y in range(size[1]):
-        ratio = y / max(size[1] - 1, 1)
-        color = tuple(int(top[i] + (bottom[i] - top[i]) * ratio) for i in range(3))
-        draw.line((0, y, size[0], y), fill=color)
-    radius = min(size) // 7
-    cx = int(size[0] * (0.72 if variant % 2 == 0 else 0.28))
-    cy = int(size[1] * 0.28)
-    draw.ellipse((cx - radius, cy - radius, cx + radius, cy + radius), fill=sun)
-    horizon = int(size[1] * 0.62)
-    draw.polygon([(0, horizon), (size[0] * .2, horizon - size[1] * .16), (size[0] * .38, horizon), (size[0] * .6, horizon - size[1] * .22), (size[0] * .8, horizon), (size[0], horizon - size[1] * .12), (size[0], size[1]), (0, size[1])], fill=land)
-    draw.polygon([(0, horizon + size[1] * .1), (size[0] * .28, horizon - size[1] * .03), (size[0] * .5, horizon + size[1] * .11), (size[0] * .74, horizon), (size[0], horizon + size[1] * .08), (size[0], size[1]), (0, size[1])], fill="#18251f")
-    return image
-
-
 def avatar() -> None:
     canvas = Image.new("RGB", SIZE, "#111410")
     draw = ImageDraw.Draw(canvas)
@@ -92,7 +69,7 @@ def postcard() -> None:
 def magazine_cover() -> None:
     canvas = Image.new("RGB", SIZE, "#111410")
     cover = Image.new("RGB", (470, 664), "#f1efe7")
-    cover.paste(generated_scene((436, 530), 0), (17, 88))
+    cover.paste(fit("showcase-sources/editorial-portrait.jpg", (436, 530)), (17, 88))
     draw_cover = ImageDraw.Draw(cover)
     draw_cover.text((18, 8), "FORM", fill="#121512", font=font(64, True))
     draw_cover.text((366, 17), "ISSUE 07", fill="#121512", font=font(14, True))
@@ -100,7 +77,7 @@ def magazine_cover() -> None:
     draw_cover.text((34, 484), "THE IMAGE EDIT", fill="#151713", font=font(14, True))
     draw_cover.text((32, 520), "MAKE THE", fill="#151713", font=font(32, True))
     draw_cover.text((32, 558), "FRAME YOURS", fill="#151713", font=font(28, True))
-    canvas.paste(cover, (72, 45))
+    canvas.paste(cover, (155, 45))
     draw = ImageDraw.Draw(canvas)
     draw.text((655, 230), "EDITORIAL SYSTEM", fill="#d8ff62", font=font(21, True))
     draw.text((652, 278), "ONE IMAGE.", fill="#f4f4ee", font=font(52, True))
@@ -120,9 +97,9 @@ def scrapbook() -> None:
         draw.line((0, y, 1200, y), fill="#d9d0c1", width=1)
     draw.text((55, 38), "weekend notes", fill="#342f29", font=font(38, True))
     cards = [
-        (generated_scene((320, 310), 0), (80, 145), -5, "the first frame"),
-        (generated_scene((275, 250), 1), (445, 104), 4, "small discoveries"),
-        (generated_scene((260, 235), 2), (785, 335), -3, "keep this close"),
+        (fit("showcase-sources/memory-blossom.jpg", (320, 310)), (80, 145), -5, "the first frame"),
+        (fit("showcase-sources/memory-cave.jpg", (275, 250)), (445, 104), 4, "small discoveries"),
+        (fit("showcase-sources/story-rain.jpg", (260, 235)), (785, 335), -3, "keep this close"),
     ]
     for scene, position, angle, caption in cards:
         card = Image.new("RGB", (scene.width + 34, scene.height + 94), "#fffdf7")
@@ -149,8 +126,13 @@ def filmstrip() -> None:
         draw.rounded_rectangle((x, 140, x + 38, 161), radius=4, fill="#ede7d6")
         draw.rounded_rectangle((x, 554, x + 38, 575), radius=4, fill="#ede7d6")
     slots = [(68, 183), (440, 183), (812, 183)]
-    for index, point in enumerate(slots):
-        canvas.paste(generated_scene((320, 345), index), point)
+    scenes = [
+        fit("showcase-sources/story-rain.jpg", (320, 345)),
+        fit("showcase-sources/story-time.jpg", (320, 345)),
+        fit("showcase-sources/story-ice.jpg", (320, 345)),
+    ]
+    for index, (point, scene) in enumerate(zip(slots, scenes)):
+        canvas.paste(scene, point)
         draw.text((point[0], 620), f"FRAME 0{index + 1}", fill="#d8ff62", font=font(16, True))
     draw.text((68, 666), "Opening image", fill="#f3f0e6", font=font(23))
     draw.text((440, 666), "Change in rhythm", fill="#f3f0e6", font=font(23))

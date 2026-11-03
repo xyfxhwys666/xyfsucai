@@ -12,6 +12,8 @@ docker compose up --build
 
 浏览器打开 <http://localhost:3000>，后端 API 在 <http://localhost:8080>。首次启动由 Spring SQL 初始化表和种子模板。上传文件和 MySQL 数据分别存放在 Compose named volume 中。
 
+页面划分为两个业务入口：首页 `/` 用于自动轮播精选模板、分类筛选和提交制作；个人作品页 `/creations` 专门展示当前身份的任务状态、失败原因和成功结果。右上角身份按钮打开个人中心侧栏，可切换身份、查看任务统计和最近制作，并进入完整作品历史。数据库初始化不会创建任何默认任务记录。
+
 本地开发也可以分别启动：先用 `docker compose up -d db` 启动映射到本机 3307 端口的数据库；后端进入 `backend`，设置 `DB_URL=jdbc:mysql://localhost:3307/material_app?...` 后运行 `mvn spring-boot:run`（或构建后 `java -jar target/material-backend-1.0.0.jar`）；前端进入 `frontend` 后运行 `npm install && npm run dev`。前端通过 `NEXT_PUBLIC_API_URL` 指向 Java API；后端通过 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD` 配置连接。
 
 ## 业务边界与接口
@@ -32,7 +34,7 @@ TASK_DELAY_MS=5000 docker compose up --build
 
 指定阶段失败：`FAIL_STAGE=ASSET_CHECK`、`GENERATING` 或 `PACKAGING`（也接受连字符写法），例如 `FAIL_STAGE=GENERATING docker compose up --build`。失败只影响新创建的任务。可连续打开多个模板并提交，任务卡片相互独立。刷新浏览器即可演示服务端历史恢复。
 
-身份采用轻量的“本地创作者档案”策略：页面右上角可以在 `demo-user`、`creator-lin` 和 `creator-mia` 间切换，选择保存在浏览器 `localStorage`。所有任务创建、历史和单任务查询都携带 `X-Demo-User`；后端查询同时使用任务 ID 与用户 ID，因而不同档案的记录互相不可见。切换身份会取消旧身份的加载/轮询请求、清空当前列表，再从 Java 后端恢复新身份的历史。演示方法：使用“创作者 林”创建任务，切到“Mia”应看到独立空记录；刷新后仍保持当前档案。没有实现账号、密码或第三方登录，这符合题目允许自行设计身份策略的范围。
+身份采用轻量的“本地创作者档案”策略：点击页面右上角身份按钮会打开个人中心侧栏，可以在 `demo-user`、`creator-lin` 和 `creator-mia` 间切换，并查看该身份的任务统计、最近制作及完整历史入口。选择保存在浏览器 `localStorage`。所有任务创建、历史和单任务查询都携带 `X-Demo-User`；后端查询同时使用任务 ID 与用户 ID，因而不同档案的记录互相不可见。切换身份会取消旧身份的加载/轮询请求、清空当前列表，再从 Java 后端恢复新身份的历史。演示方法：使用“创作者 林”创建任务，切到“Mia”应看到独立空记录；刷新后仍保持当前档案。没有实现账号、密码、邮箱、付费或第三方登录，这些均不属于题目范围。
 
 ## 测试与交付
 

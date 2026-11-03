@@ -231,7 +231,7 @@ export function StudioApp() {
         {featured && <img className="feature-image" src={featured.coverUrl} alt="" />}
         <div className="feature-shade" />
         <div className="feature-copy">
-          <span className="feature-kicker">精选创作 · FEATURED TEMPLATE</span>
+          <span className="feature-kicker">精选效果 · RESULT PREVIEW</span>
           <h1>{featured?.title || '灵感工坊'}</h1>
           <p>{featured?.description || '选择模板，开始制作。'}</p>
           <div className="feature-meta">
@@ -260,7 +260,7 @@ export function StudioApp() {
           <div className="template-grid">
             {visibleTemplates.map((template, index) => (
               <button className="template-card" key={template.id} onClick={() => openTemplate(template)} aria-label={`查看并制作：${template.title}`}>
-                <span className="template-image-wrap"><img src={template.coverUrl} alt=""/><span className="template-open">打开模板 <b aria-hidden="true">↗</b></span><span className="template-number">0{index + 1}</span></span>
+                <span className="template-image-wrap"><img src={template.coverUrl} alt={`${template.title}处理后效果示例`}/><span className="result-preview-label">处理后效果示例</span><span className="template-open">使用同款效果 <b aria-hidden="true">↗</b></span><span className="template-number">{String(index + 1).padStart(2, '0')}</span></span>
                 <span className="template-details"><span className="template-category">{template.category}</span><strong>{template.title}</strong><span className="template-description">{template.description}</span><span className="template-spec">{template.requiredImageCount} 张图片 <i /> {template.acceptedMimeTypes.split(',').map(type => type.replace('image/', '').toUpperCase()).join(' / ')}</span></span>
               </button>
             ))}
@@ -305,8 +305,8 @@ export function StudioApp() {
           <section className="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-title" onClick={event => event.stopPropagation()}>
             <button className="close" aria-label="关闭" onClick={() => setSelected(null)}>×</button>
             <div className="detail-layout">
-              <div className="detail-cover"><img src={selected.coverUrl} alt={`${selected.title}模板示例`} /></div>
-              <div className="detail-copy"><span className="eyebrow">{selected.category}</span><h2 id="dialog-title">{selected.title}</h2><p>{selected.description}</p>
+              <div className="detail-cover"><img src={selected.coverUrl} alt={`${selected.title}处理后效果示例`} /><span className="detail-result-label">RESULT PREVIEW · 处理后效果示例</span></div>
+              <div className="detail-copy"><span className="eyebrow">{selected.category}</span><h2 id="dialog-title">{selected.title}</h2><p>{selected.description}</p><p className="result-hint">上传自己的图片后，系统会使用相同版式生成任务专属结果，不会直接返回示例图。</p>
                 <div className="requirements"><span>素材要求</span><strong>{selected.requiredImageCount} 张图片</strong><span>{selected.acceptedMimeTypes.split(',').map(type => type.replace('image/', '').toUpperCase()).join(' / ')}</span><span>单张最大 {byteLabel(selected.maxFileSizeBytes)}</span></div>
               </div>
             </div>

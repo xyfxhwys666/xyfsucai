@@ -32,7 +32,11 @@ public class ResultComposer {
         String svg = switch (task.templateId()) {
             case "demo-avatar" -> avatar(images.getFirst());
             case "demo-collage" -> collage(images);
-            default -> postcard(images);
+            case "demo-postcard" -> postcard(images);
+            case "demo-dream-poster" -> dreamPoster(images.getFirst());
+            case "demo-rainy-cinema" -> rainyCinema(images.getFirst());
+            case "demo-fantasy-scene" -> fantasyScene(images);
+            default -> dreamPoster(images.getFirst());
         };
 
         Path resultDir = storage.resolve("results");
@@ -93,6 +97,48 @@ public class ResultComposer {
                     .append("\" width=\"600\" height=\"600\" preserveAspectRatio=\"xMidYMid slice\"/>");
         }
         return body.append("<rect x=\"24\" y=\"24\" width=\"1152\" height=\"1152\" fill=\"none\" stroke=\"#f4f4ee\" stroke-width=\"12\"/></svg>").toString();
+    }
+
+    private String dreamPoster(String image) {
+        return svgStart(1000, 1400) + """
+          <defs><linearGradient id="shade" x1="0" y1="0" x2="0" y2="1"><stop offset="35%%" stop-color="#11131a" stop-opacity="0"/><stop offset="100%%" stop-color="#11131a" stop-opacity=".94"/></linearGradient></defs>
+          <image href="%s" width="1000" height="1400" preserveAspectRatio="xMidYMid slice"/>
+          <rect width="1000" height="1400" fill="url(#shade)"/>
+          <rect x="54" y="54" width="892" height="1292" fill="none" stroke="#f6f1e6" stroke-width="3"/>
+          <text x="82" y="1120" fill="#ffffff" font-family="Arial" font-size="38" letter-spacing="12">DREAMSCAPE</text>
+          <text x="82" y="1192" fill="#ffffff" font-family="Arial" font-size="80" font-weight="700">BEYOND LIGHT</text>
+          <text x="84" y="1250" fill="#dedbd2" font-family="Arial" font-size="24">A poster composed from your uploaded image</text>
+        </svg>
+        """.formatted(image);
+    }
+
+    private String rainyCinema(String image) {
+        return svgStart(1600, 900) + """
+          <image href="%s" width="1600" height="900" preserveAspectRatio="xMidYMid slice"/>
+          <rect width="1600" height="120" fill="#090a0d"/>
+          <rect y="780" width="1600" height="120" fill="#090a0d"/>
+          <rect width="1600" height="900" fill="#121526" opacity=".18"/>
+          <text x="90" y="190" fill="#f2f0e9" font-family="Arial" font-size="24" letter-spacing="9">NIGHT ARCHIVE · 06</text>
+          <text x="90" y="720" fill="#ffffff" font-family="Arial" font-size="76" font-weight="700">AFTER THE RAIN</text>
+          <text x="92" y="758" fill="#d2d5dd" font-family="Arial" font-size="22">Cinematic atmosphere from one uploaded frame</text>
+        </svg>
+        """.formatted(image);
+    }
+
+    private String fantasyScene(List<String> images) {
+        String first = images.getFirst();
+        String second = images.size() > 1 ? images.get(1) : first;
+        return svgStart(1400, 900) + """
+          <defs><linearGradient id="cold" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#071526" stop-opacity=".15"/><stop offset="1" stop-color="#071526" stop-opacity=".78"/></linearGradient></defs>
+          <image href="%s" width="1400" height="900" preserveAspectRatio="xMidYMid slice"/>
+          <rect width="1400" height="900" fill="url(#cold)"/>
+          <image href="%s" x="1015" y="90" width="290" height="290" preserveAspectRatio="xMidYMid slice"/>
+          <rect x="992" y="67" width="336" height="336" fill="none" stroke="#b8efff" stroke-width="3"/>
+          <text x="75" y="690" fill="#ffffff" font-family="Arial" font-size="31" letter-spacing="10">EXPEDITION FILE</text>
+          <text x="72" y="775" fill="#ffffff" font-family="Arial" font-size="84" font-weight="700">FROZEN HORIZON</text>
+          <text x="76" y="830" fill="#c8eff8" font-family="Arial" font-size="23">Two uploaded images composed into one fantasy scene</text>
+        </svg>
+        """.formatted(first, second);
     }
 
     private String svgStart(int width, int height) {

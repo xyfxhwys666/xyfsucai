@@ -37,4 +37,21 @@ class ResultComposerTest {
         assertTrue(svg.contains("data:image/jpeg;base64,AQIDBA=="));
         assertTrue(svg.contains("data:image/png;base64,BQYHCA=="));
     }
+
+    @Test
+    void dreamPosterUsesItsOwnLayoutAndUploadedImage() throws Exception {
+        TaskAssetMapper assets = mock(TaskAssetMapper.class);
+        Task task = new Task("task-dream", "creator-mia", "demo-dream-poster", "PROCESSING", "PACKAGING", null, null, LocalDateTime.now(), LocalDateTime.now());
+        Files.write(storage.resolve("dream.webp"), new byte[]{9, 10, 11, 12});
+        when(assets.findByTask(task.id())).thenReturn(List.of(
+                new TaskAsset(1, task.id(), "/uploads/dream.webp", "dream.webp", "image/webp")
+        ));
+
+        new ResultComposer(assets, storage.toString()).create(task);
+        String svg = Files.readString(storage.resolve("results/task-dream.svg"));
+
+        assertTrue(svg.contains("data:image/webp;base64,CQoLDA=="));
+        assertTrue(svg.contains("DREAMSCAPE"));
+        assertTrue(svg.contains("offset=\"35%\""));
+    }
 }

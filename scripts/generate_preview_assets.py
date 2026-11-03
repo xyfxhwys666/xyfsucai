@@ -21,6 +21,29 @@ def save(image: Image.Image, name: str) -> None:
     image.save(DEMO / name, "JPEG", quality=91, optimize=True, progressive=True)
 
 
+def generated_scene(size: tuple[int, int], variant: int) -> Image.Image:
+    palettes = [
+        ((33, 46, 40), (174, 126, 86), "#f1cf8f", "#314c3d"),
+        ((28, 37, 55), (116, 97, 122), "#f4d6a3", "#324460"),
+        ((54, 39, 32), (173, 101, 73), "#f3c66f", "#5b4035"),
+    ]
+    top, bottom, sun, land = palettes[variant % len(palettes)]
+    image = Image.new("RGB", size)
+    draw = ImageDraw.Draw(image)
+    for y in range(size[1]):
+        ratio = y / max(size[1] - 1, 1)
+        color = tuple(int(top[i] + (bottom[i] - top[i]) * ratio) for i in range(3))
+        draw.line((0, y, size[0], y), fill=color)
+    radius = min(size) // 7
+    cx = int(size[0] * (0.72 if variant % 2 == 0 else 0.28))
+    cy = int(size[1] * 0.28)
+    draw.ellipse((cx - radius, cy - radius, cx + radius, cy + radius), fill=sun)
+    horizon = int(size[1] * 0.62)
+    draw.polygon([(0, horizon), (size[0] * .2, horizon - size[1] * .16), (size[0] * .38, horizon), (size[0] * .6, horizon - size[1] * .22), (size[0] * .8, horizon), (size[0], horizon - size[1] * .12), (size[0], size[1]), (0, size[1])], fill=land)
+    draw.polygon([(0, horizon + size[1] * .1), (size[0] * .28, horizon - size[1] * .03), (size[0] * .5, horizon + size[1] * .11), (size[0] * .74, horizon), (size[0], horizon + size[1] * .08), (size[0], size[1]), (0, size[1])], fill="#18251f")
+    return image
+
+
 def avatar() -> None:
     canvas = Image.new("RGB", SIZE, "#111410")
     draw = ImageDraw.Draw(canvas)
@@ -66,85 +89,80 @@ def postcard() -> None:
     save(canvas, "result-demo-postcard.jpg")
 
 
-def dream_poster() -> None:
-    canvas = Image.new("RGB", SIZE, "#10120f")
-    poster = Image.new("RGB", (520, 676))
-    poster_draw = ImageDraw.Draw(poster)
-    for y in range(676):
-        ratio = y / 675
-        color = (int(50 + 65 * ratio), int(35 + 18 * ratio), int(95 - 35 * ratio))
-        poster_draw.line((0, y, 520, y), fill=color)
-    poster_draw.ellipse((315, 82, 435, 202), fill="#f5dca5")
-    poster_draw.polygon([(0, 420), (115, 270), (220, 410), (330, 245), (520, 430), (520, 676), (0, 676)], fill="#22243d")
-    poster_draw.polygon([(0, 500), (150, 370), (280, 505), (405, 340), (520, 450), (520, 676), (0, 676)], fill="#131827")
-    for x, y in [(72, 92), (146, 165), (238, 105), (286, 210), (458, 65), (390, 255)]:
-        poster_draw.ellipse((x, y, x + 5, y + 5), fill="white")
-    canvas.paste(poster, (70, 40))
+def magazine_cover() -> None:
+    canvas = Image.new("RGB", SIZE, "#111410")
+    cover = Image.new("RGB", (470, 664), "#f1efe7")
+    cover.paste(generated_scene((436, 530), 0), (17, 88))
+    draw_cover = ImageDraw.Draw(cover)
+    draw_cover.text((18, 8), "FORM", fill="#121512", font=font(64, True))
+    draw_cover.text((366, 17), "ISSUE 07", fill="#121512", font=font(14, True))
+    draw_cover.rectangle((17, 465, 252, 618), fill="#d8ff62")
+    draw_cover.text((34, 484), "THE IMAGE EDIT", fill="#151713", font=font(14, True))
+    draw_cover.text((32, 520), "MAKE THE", fill="#151713", font=font(32, True))
+    draw_cover.text((32, 558), "FRAME YOURS", fill="#151713", font=font(28, True))
+    canvas.paste(cover, (72, 45))
     draw = ImageDraw.Draw(canvas)
-    draw.rectangle((88, 58, 572, 698), outline="#f4f1e8", width=3)
-    draw.text((112, 570), "DREAMSCAPE", fill="white", font=font(23))
-    draw.text((110, 612), "BEYOND LIGHT", fill="white", font=font(39, True))
-    draw.text((680, 258), "FIXED POSTER", fill="#c8f078", font=font(23))
-    draw.text((678, 307), "ONE IMAGE", fill="#f4f4ee", font=font(52, True))
-    draw.line((680, 380, 1105, 380), fill="#6f746a", width=2)
-    draw.text((680, 420), "Border / title / gradient", fill="#aeb2a8", font=font(24))
-    draw.text((680, 457), "applied to your upload", fill="#aeb2a8", font=font(24))
-    save(canvas, "result-demo-dream-poster.jpg")
+    draw.text((655, 230), "EDITORIAL SYSTEM", fill="#d8ff62", font=font(21, True))
+    draw.text((652, 278), "ONE IMAGE.", fill="#f4f4ee", font=font(52, True))
+    draw.text((652, 338), "STRONG COVER.", fill="#f4f4ee", font=font(47, True))
+    draw.line((655, 420, 1110, 420), fill="#6f746a", width=2)
+    draw.text((655, 462), "Masthead / issue / hierarchy", fill="#aeb2a8", font=font(23))
+    draw.text((655, 500), "and a fixed accent panel", fill="#aeb2a8", font=font(23))
+    save(canvas, "result-demo-magazine-cover.jpg")
 
 
-def rainy_cinema() -> None:
-    canvas = Image.new("RGB", SIZE)
+def scrapbook() -> None:
+    canvas = Image.new("RGB", SIZE, "#e9e1d2")
     draw = ImageDraw.Draw(canvas)
-    for y in range(756):
-        ratio = y / 755
-        draw.line((0, y, 1200, y), fill=(int(10 + 18 * ratio), int(22 + 35 * ratio), int(42 + 55 * ratio)))
-    buildings = [(0, 205, 145, 648), (122, 155, 300, 648), (285, 248, 430, 648), (410, 125, 575, 648), (560, 220, 710, 648), (695, 90, 875, 648), (850, 185, 1010, 648), (995, 130, 1200, 648)]
-    for index, box in enumerate(buildings):
-        draw.rectangle(box, fill="#101c2c" if index % 2 else "#15273a")
-        for wx in range(box[0] + 18, box[2] - 10, 34):
-            for wy in range(box[1] + 28, box[3] - 24, 42):
-                if (wx + wy + index) % 3:
-                    draw.rectangle((wx, wy, wx + 12, wy + 18), fill="#78cbd1")
-    draw.rectangle((0, 610, 1200, 648), fill="#1e4051")
-    for x in range(0, 1200, 70):
-        draw.line((x, 650, x - 45, 730), fill="#4d8ca1", width=3)
-    draw.rectangle((0, 0, 1200, 108), fill="#090a0d")
-    draw.rectangle((0, 648, 1200, 756), fill="#090a0d")
-    for x in range(-120, 1320, 78):
-        draw.line((x, 120, x - 120, 635), fill="#bed7ee", width=2)
-    draw.text((72, 145), "NIGHT ARCHIVE / 06", fill="#eef0ee", font=font(20))
-    draw.text((70, 548), "AFTER THE RAIN", fill="white", font=font(55, True))
-    draw.text((72, 607), "Fixed cinematic crop, tint and captions", fill="#d0d5dc", font=font(22))
-    save(canvas, "result-demo-rainy-cinema.jpg")
-
-
-def fantasy_scene() -> None:
-    canvas = Image.new("RGB", SIZE)
+    for x in range(0, 1200, 30):
+        draw.line((x, 0, x, 756), fill="#d9d0c1", width=1)
+    for y in range(0, 756, 30):
+        draw.line((0, y, 1200, y), fill="#d9d0c1", width=1)
+    draw.text((55, 38), "weekend notes", fill="#342f29", font=font(38, True))
+    cards = [
+        (generated_scene((320, 310), 0), (80, 145), -5, "the first frame"),
+        (generated_scene((275, 250), 1), (445, 104), 4, "small discoveries"),
+        (generated_scene((260, 235), 2), (785, 335), -3, "keep this close"),
+    ]
+    for scene, position, angle, caption in cards:
+        card = Image.new("RGB", (scene.width + 34, scene.height + 94), "#fffdf7")
+        card.paste(scene, (17, 17))
+        ImageDraw.Draw(card).text((22, scene.height + 40), caption, fill="#3b3730", font=font(19))
+        rotated = card.rotate(angle, expand=True, resample=Image.Resampling.BICUBIC, fillcolor="#e9e1d2")
+        canvas.paste(rotated, position)
     draw = ImageDraw.Draw(canvas)
-    for y in range(756):
-        ratio = y / 755
-        draw.line((0, y, 1200, y), fill=(int(16 + 42 * ratio), int(48 + 75 * ratio), int(78 + 82 * ratio)))
-    draw.ellipse((850, 62, 1035, 247), fill="#d9f7ff")
-    draw.polygon([(0, 520), (175, 245), (330, 510), (515, 180), (720, 520), (920, 270), (1200, 530), (1200, 756), (0, 756)], fill="#b9dce7")
-    draw.polygon([(0, 575), (225, 360), (390, 560), (590, 300), (760, 570), (980, 390), (1200, 550), (1200, 756), (0, 756)], fill="#648ca8")
-    draw.polygon([(0, 620), (220, 540), (450, 610), (690, 510), (930, 600), (1200, 530), (1200, 756), (0, 756)], fill="#d4f4f8")
-    inset = Image.new("RGB", (250, 250), "#153c59")
-    inset_draw = ImageDraw.Draw(inset)
-    inset_draw.polygon([(125, 18), (154, 94), (232, 125), (154, 156), (125, 232), (96, 156), (18, 125), (96, 94)], fill="#9ce8f4")
-    inset_draw.polygon([(125, 54), (143, 107), (196, 125), (143, 143), (125, 196), (107, 143), (54, 125), (107, 107)], fill="#e2fbff")
-    canvas.paste(inset, (862, 88))
-    draw.rectangle((842, 68, 1132, 358), outline="#b8efff", width=4)
-    draw.rectangle((45, 500, 735, 704), fill="#17394d")
-    draw.text((66, 535), "EXPEDITION FILE", fill="#c8eff8", font=font(23))
-    draw.text((64, 582), "FROZEN HORIZON", fill="white", font=font(54, True))
-    draw.text((66, 653), "Main image + second image archive panel", fill="#d2edf4", font=font(22))
-    save(canvas, "result-demo-fantasy-scene.jpg")
+    draw.rectangle((185, 121, 315, 150), fill="#e6c86d")
+    draw.rectangle((525, 87, 650, 114), fill="#d98d79")
+    draw.rectangle((865, 314, 980, 341), fill="#9bbd9c")
+    draw.text((815, 78), "THREE PHOTOS / ONE PAGE", fill="#6d655b", font=font(18, True))
+    draw.arc((520, 570, 740, 730), 205, 330, fill="#ae5147", width=5)
+    save(canvas, "result-demo-scrapbook.jpg")
+
+
+def filmstrip() -> None:
+    canvas = Image.new("RGB", SIZE, "#171a17")
+    draw = ImageDraw.Draw(canvas)
+    draw.text((55, 42), "SEQUENCE / 03", fill="#f3f0e6", font=font(24, True))
+    draw.text((955, 48), "A STORY IN THREE FRAMES", fill="#9da296", font=font(16))
+    draw.rounded_rectangle((45, 125, 1155, 590), radius=8, fill="#080908")
+    for x in range(65, 1140, 66):
+        draw.rounded_rectangle((x, 140, x + 38, 161), radius=4, fill="#ede7d6")
+        draw.rounded_rectangle((x, 554, x + 38, 575), radius=4, fill="#ede7d6")
+    slots = [(68, 183), (440, 183), (812, 183)]
+    for index, point in enumerate(slots):
+        canvas.paste(generated_scene((320, 345), index), point)
+        draw.text((point[0], 620), f"FRAME 0{index + 1}", fill="#d8ff62", font=font(16, True))
+    draw.text((68, 666), "Opening image", fill="#f3f0e6", font=font(23))
+    draw.text((440, 666), "Change in rhythm", fill="#f3f0e6", font=font(23))
+    draw.text((812, 666), "The final memory", fill="#f3f0e6", font=font(23))
+    draw.line((68, 718, 1132, 718), fill="#5e6359", width=2)
+    save(canvas, "result-demo-filmstrip.jpg")
 
 
 if __name__ == "__main__":
     avatar()
     collage()
     postcard()
-    dream_poster()
-    rainy_cinema()
-    fantasy_scene()
+    magazine_cover()
+    scrapbook()
+    filmstrip()

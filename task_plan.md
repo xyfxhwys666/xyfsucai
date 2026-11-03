@@ -18,12 +18,13 @@
 - [complete] 阶段 12：分离模板示例与用户测试素材
 - [complete] 阶段 13：替换低质量模板为成熟固定版式
 - [complete] 阶段 14：使用用户授权素材升级新模板展示图
+- [complete] 阶段 15：重写验收级 README 并加入界面截图
 
 ## 当前阶段
 全部阶段已完成
 
 ## Next Step
-提交并推送用户授权素材版模板预览。
+等待用户按 README 进行最终验收。
 
 ## 决策记录
 - 用户身份先采用演示用户 ID（请求头可切换），避免引入不在范围内的账号系统；README 明确演示方式。
@@ -43,3 +44,7 @@
 | `git push` 连接 GitHub 443 超时 | 1 | 本地 commit 已完成，检查代理与网络后重试推送 |
 | Next.js 开发服务缺少 `./138.js` 分块 | 1 | 确认由运行中的 `next dev` 与 `next build` 共用 `.next` 导致，改为开发环境使用 `.next-dev` |
 | PowerShell `foreach` 后直接连接管道触发空管道解析错误 | 1 | 改为先收集数组结果，再统一格式化输出 |
+| README 事实核对时读取了不存在的 `frontend/lib/api.ts`、`types.ts` 与根目录 `.env.example` | 1 | API 与类型实际集中在 `studio-app.tsx`/`task-state.ts`；补建 `.env.example` 并按真实文件结构写文档 |
+| 单个 `apply_patch` 同时删除并新增 README 被拒绝 | 1 | 拆分为先删除旧文件、再新增完整 README 的两个补丁 |
+| Compose 内联映射中的 `http://` 默认值导致 YAML 解析失败 | 1 | 将前端 `environment` 改为块级映射后重新运行两种 config 校验 |
+| Docker 构建拉取 `node:20-alpine` 匿名令牌时 Docker Hub 连接超时 | 1 | 先检查本地镜像缓存并尝试离线/旧构建器；源码生产构建和 Compose 配置已独立通过 |

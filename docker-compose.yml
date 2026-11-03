@@ -3,29 +3,37 @@ services:
   db:
     image: mysql:8.4
     environment:
-      MYSQL_DATABASE: material_app
-      MYSQL_USER: material
-      MYSQL_PASSWORD: material
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-material_app}
+      MYSQL_USER: ${MYSQL_USER:-material}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-material}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
     volumes: ["mysql-data:/var/lib/mysql"]
     ports: ["3307:3306"]
-    healthcheck: {test: ["CMD","mysqladmin","ping","-h","localhost","-umaterial","-pmaterial"], interval: 5s, timeout: 5s, retries: 20}
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u$${MYSQL_USER} -p$${MYSQL_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
   backend:
     build: ./backend
     environment:
-      DB_URL: jdbc:mysql://db:3306/material_app?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Tokyo
-      DB_USERNAME: material
-      DB_PASSWORD: material
+      DB_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-material_app}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Tokyo
+      DB_USERNAME: ${MYSQL_USER:-material}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-material}
       STORAGE_DIR: /data/uploads
-      TASK_DELAY_MS: 1200
-      FAIL_STAGE: none
-      CORS_ORIGIN: http://localhost:3000
+      TASK_DELAY_MS: ${TASK_DELAY_MS:-1200}
+      FAIL_STAGE: ${FAIL_STAGE:-none}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
     volumes: ["upload-data:/data/uploads"]
     depends_on: {db: {condition: service_healthy}}
     ports: ["8080:8080"]
   frontend:
-    build: ./frontend
-    environment: {NEXT_PUBLIC_API_URL: http://localhost:8080/api}
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api}
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api}
     depends_on: [backend]
     ports: ["3000:3000"]
 volumes: {mysql-data: {}, upload-data: {}}

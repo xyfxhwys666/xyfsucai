@@ -49,3 +49,18 @@
 - 模板卡片使用比轮播更高的裁切比例，初版杂志预览的左侧刊头 `FORM` 在卡片中被裁掉首字母；需要把整张封面向中心安全区移动，同时保留宽屏右侧说明。
 - 强制刷新后的第一帧会短暂显示模板加载占位状态（计数 `00`），视觉验收需要等待 Java 模板接口返回后再截图，不能把该瞬间误判为空数据故障。
 - 将杂志封面向中心移动后，详情预览中的 `FORM` 刊头、人物主体、强调色块和右侧标题全部完整可见，适配卡片裁切的同时没有破坏宽屏构图。
+
+## README 事实核对（2026-11-03）
+- 精确版本：Next.js 14.2.15、React 18.3.1、TypeScript 5.7.2、Vitest 2.1.9；Java 21、Spring Boot 3.3.5、MyBatis Starter 3.0.3；Compose 使用 MySQL 8.4、Node 20、Maven 3.9.9。
+- 前端 API、模板类型、身份选择、轮询和上传逻辑集中在 `frontend/components/studio-app.tsx`，任务状态合并逻辑位于 `frontend/lib/task-state.ts`，仓库没有独立 `api.ts` 或 `types.ts`。
+- 后端异步池为 core=4、max=8、queue=50；任务顺序为 `ASSET_CHECK -> GENERATING -> PACKAGING -> COMPLETED`，每步先持久化再延迟，查询接口不推进任务。
+- 数据库包含 `templates`、`tasks`、`task_assets` 三张表；初始化模板通过 `data.sql` upsert，任务表没有默认记录。
+- 现有 Compose 把 `TASK_DELAY_MS` 与 `FAIL_STAGE` 写死，导致 README 原有的命令行覆盖示例不生效；需要改为 Compose 变量替换并新增 `.env.example`。
+- CI 在 push/PR 上执行 Maven 测试与打包，以及前端 lint、TypeScript、Vitest 和 production build；未配置浏览器 E2E。
+- 7 张用户提供的界面截图已按用途复制为 `docs/screenshots/{home-featured,template-library-top,template-library-bottom,result-preview,creation-history,profile-drawer-top,profile-drawer-bottom}.png`，README 应使用相对路径保证 GitHub 可渲染。
+- 修复 Compose 的 URL 内联 YAML 解析问题后，默认配置和 `--env-file .env.example` 均通过 `docker compose config`；解析结果正确包含模拟耗时、失败阶段、数据库名和前端 API 构建参数。
+- `.gitignore` 原先没有忽略 `.env`，已补充，避免本地配置被误提交；`.env.example` 继续纳入版本控制。
+- README 最终包含 856 行、约 1.8 万字符，7 张截图路径和所有题目要求章节均通过检查；前端 typecheck/build、lint/Vitest 与后端 Maven 测试通过。
+- `docker compose build frontend` 在读取 Docker Hub `node:20-alpine` 元数据时因当前网络连接超时失败，尚未证明新 Dockerfile 的容器构建；失败发生在执行任何项目构建步骤之前。
+- Compose 环境覆盖实测成功：临时设置 `TASK_DELAY_MS=5000`、`FAIL_STAGE=GENERATING` 后，最终配置准确显示新值；`.env` 也通过 `git check-ignore` 确认为忽略文件。
+- Compose 开放 `MYSQL_USER`/`MYSQL_PASSWORD` 配置时，健康检查也必须读取容器内对应变量；否则非默认账号下数据库虽启动，后端仍会被 `depends_on` 阻塞。

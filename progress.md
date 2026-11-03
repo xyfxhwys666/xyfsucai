@@ -42,3 +42,8 @@
 - 更新预览生成脚本：杂志封面使用人物图，剪贴簿使用樱花树/洞穴树/雨夜城市，胶片故事板使用雨夜/时钟/冰原；三张预览已重新生成并完成视觉检查。
 - 前端 typecheck、lint、Vitest 和 production build 已通过；浏览器刷新后确认首页已显示新的授权素材版胶片故事板。
 - 根据真实卡片裁切修正杂志封面安全区；详情弹窗最终确认刊头、主体、标题和上传位完整显示。
+- 开始重写验收级 README；已核对版本、源码结构、API、异步执行、数据库、测试和 CI 事实，并将用户提供的 7 张界面截图整理到 `docs/screenshots/`。
+- README 已重写为完整验收文档并加入 R-01 至 R-14 覆盖矩阵；新增 `.env.example`、Compose 可覆盖配置和前端 API build argument，默认与示例配置解析均通过。
+- 最终源码检查通过：前端 typecheck/build、lint/Vitest、后端 Maven 测试、README 必填章节与截图链接；Docker 镜像构建首次尝试因 Docker Hub 网络超时停在基础镜像授权阶段。
+- README 已加入本次验证结果表，明确区分通过项与 Docker Hub 网络导致的镜像重建未验证项；Compose 自定义耗时/失败阶段覆盖和 `.env` 忽略规则均已实测。
+- 最终提交前修正 Compose 健康检查，使自定义 MySQL 用户名和密码与数据库就绪检测保持一致。

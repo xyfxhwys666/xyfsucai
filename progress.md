@@ -15,3 +15,4 @@
 - 使用用户提供的本地图片实际验证两张素材上传；提交按钮按素材数量启用，任务从等待处理推进至成功，结果可预览。
 - 新增 Vitest 状态逻辑测试，覆盖多任务按 ID 隔离、查询异常保留原状态、失败任务终态识别。
 - 验证通过：前端 lint、typecheck、3 个 Vitest 用例和 production build；后端 `mvn test package`。
+- 改版已提交并推送到 GitHub `main`，验收 commit 为 `94f97c2a`。

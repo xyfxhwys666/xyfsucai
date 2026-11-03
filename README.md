@@ -12,7 +12,7 @@ docker compose up --build
 
 浏览器打开 <http://localhost:3000>，后端 API 在 <http://localhost:8080>。首次启动由 Spring SQL 初始化表和种子模板。上传文件和 MySQL 数据分别存放在 Compose named volume 中。
 
-本地开发也可以分别启动：后端 `cd backend && mvn spring-boot:run`，前端 `cd frontend && npm install && npm run dev`。前端通过 `NEXT_PUBLIC_API_URL` 指向 Java API；后端通过 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD` 配置连接。
+本地开发也可以分别启动：先用 `docker compose up -d db` 启动映射到本机 3307 端口的数据库；后端进入 `backend`，设置 `DB_URL=jdbc:mysql://localhost:3307/material_app?...` 后运行 `mvn spring-boot:run`（或构建后 `java -jar target/material-backend-1.0.0.jar`）；前端进入 `frontend` 后运行 `npm install && npm run dev`。前端通过 `NEXT_PUBLIC_API_URL` 指向 Java API；后端通过 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD` 配置连接。
 
 ## 业务边界与接口
 
@@ -36,9 +36,9 @@ TASK_DELAY_MS=5000 docker compose up --build
 
 ## 测试与交付
 
-CI 位于 `.github/workflows/ci.yml`，push/PR 会执行 Java `mvn test package`，以及前端 lint、TypeScript 检查和生产构建。后端测试覆盖阶段顺序和失败终态的核心契约；前端状态逻辑保持任务 ID 维度隔离，查询异常不会把已有任务改成失败（当前仓库未配置浏览器 E2E）。
+CI 位于 `.github/workflows/ci.yml`，push/PR 会执行 Java `mvn test package`，以及前端 lint、TypeScript 检查、Vitest 状态测试和生产构建。后端测试覆盖阶段顺序和失败终态；前端测试覆盖按任务 ID 合并、多任务互不串扰，以及查询异常保留原任务状态而不误判为执行失败。当前仓库未配置浏览器 E2E。
 
-已知限制：服务重启不会自动恢复执行中线程，题目明确不要求；任务受理幂等、断点续跑和自动重试也未实现。生成结果是本地 SVG 演示图，不调用真实 AI。模板封面和结果素材为仓库自制 SVG。部署回滚可通过切换 Git commit 后重新执行 `docker compose up --build`，数据卷需按需保留或迁移。
+已知限制：服务重启不会自动恢复执行中线程，题目明确不要求；任务受理幂等、断点续跑和自动重试也未实现。生成结果使用仓库内本地演示图片，不调用真实 AI。页面素材包含用户提供并授权用于本项目演示的图片。部署回滚可通过切换 Git commit 后重新执行 `docker compose up --build`，数据卷需按需保留或迁移。
 
 ## AI 工作流说明
 

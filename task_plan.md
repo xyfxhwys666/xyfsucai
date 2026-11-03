@@ -9,12 +9,14 @@
 - [complete] 阶段 3：Next.js 前端交互与状态恢复
 - [complete] 阶段 4：Compose、CI、测试与文档
 - [complete] 阶段 5：集成验证与验收说明
+- [complete] 阶段 6：参考 Magnific 优化素材工作台视觉与交互
+- [in_progress] 阶段 7：提交推送并保持本地演示服务可访问
 
 ## 当前阶段
-全部完成
+阶段 7
 
 ## Next Step
-向用户交付启动命令、验证结果和已知边界。
+提交并推送验证通过的改版，随后恢复本地演示服务。
 
 ## 决策记录
 - 用户身份先采用演示用户 ID（请求头可切换），避免引入不在范围内的账号系统；README 明确演示方式。
@@ -25,3 +27,5 @@
 |---|---:|---|
 | 本地 Git 未配置 remote/无提交 | 1 | 继续从空仓库初始化实现，并通过浏览器检查用户给定 GitHub |
 | git remote-https 不可用 | 1 | 改用浏览器访问 GitHub 页面进行只读调研 |
+| Playwright CLI wrapper 在 Windows 无法启动 | 1 | 改用 Codex 内置浏览器自动化完成真实页面验收 |
+| Docker Compose 构建拉取基础镜像超时 | 1 | 使用已有 MySQL 镜像并以本机 Java/Node 启动，完成完整业务链路验证 |
